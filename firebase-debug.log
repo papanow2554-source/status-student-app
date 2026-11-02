@@ -1,0 +1,70 @@
+[debug] [2026-10-01T05:39:07.431Z] ----------------------------------------------------------------------
+[debug] [2026-10-01T05:39:07.433Z] Command:       /usr/local/bin/firebase /home/codespace/.cache/firebase/tools/lib/node_modules/firebase-tools/lib/bin/firebase login --no-localhost
+[debug] [2026-10-01T05:39:07.433Z] CLI Version:   15.32.1
+[debug] [2026-10-01T05:39:07.433Z] Platform:      linux
+[debug] [2026-10-01T05:39:07.434Z] Node Version:  v20.18.2
+[debug] [2026-10-01T05:39:07.434Z] Detected Agent: unknown
+[debug] [2026-10-01T05:39:07.434Z] Time:          Thu Oct 01 2026 05:39:07 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-10-01T05:39:07.434Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  The Firebase CLI’s MCP server feature can optionally make use of Gemini in Firebase. Learn more about Gemini in Firebase and how it uses your data: https://firebase.google.com/docs/gemini-in-firebase#how-gemini-in-firebase-uses-your-data 
+[debug] [2026-10-01T05:39:52.785Z] ----------------------------------------------------------------------
+[debug] [2026-10-01T05:39:52.788Z] Command:       /usr/local/bin/firebase /home/codespace/.cache/firebase/tools/lib/node_modules/firebase-tools/lib/bin/firebase login --no-localhost
+[debug] [2026-10-01T05:39:52.789Z] CLI Version:   15.32.1
+[debug] [2026-10-01T05:39:52.789Z] Platform:      linux
+[debug] [2026-10-01T05:39:52.789Z] Node Version:  v20.18.2
+[debug] [2026-10-01T05:39:52.789Z] Detected Agent: unknown
+[debug] [2026-10-01T05:39:52.790Z] Time:          Thu Oct 01 2026 05:39:52 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-10-01T05:39:52.790Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  The Firebase CLI’s MCP server feature can optionally make use of Gemini in Firebase. Learn more about Gemini in Firebase and how it uses your data: https://firebase.google.com/docs/gemini-in-firebase#how-gemini-in-firebase-uses-your-data 
+[info] 
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you. 
+[info] 
+[info] i  To change your preferences at any time, run `firebase logout` and `firebase login` again. 
+[debug] [2026-10-01T05:40:39.349Z] >>> [apiv2][query] POST https://auth.firebase.tools/attest [none]
+[debug] [2026-10-01T05:40:39.349Z] >>> [apiv2][body] POST https://auth.firebase.tools/attest {"session_id":"e8c066f4-7898-44b4-b624-6245a133524f"}
+[debug] [2026-10-01T05:40:39.886Z] <<< [apiv2][status] POST https://auth.firebase.tools/attest 200
+[debug] [2026-10-01T05:40:39.886Z] <<< [apiv2][body] POST https://auth.firebase.tools/attest {"token":"-fs2pVgmisn3y3J4t8G1NGvvZ4afs7AOsukDhO-8eD4"}
+[info] 
+[info] To sign in to the Firebase CLI:
+[info] 
+[info] 1. Take note of your session ID:
+[info] 
+[info]    E8C06
+[info] 
+[info] 2. Visit the URL below on any device and follow the instructions to get your code:
+[info] 
+[info]    https://auth.firebase.tools/login?code_challenge=UQVs1VNqLjVCy_gtZPT-CqSl7pW64hg8EhTgcXZck7s&session=e8c066f4-7898-44b4-b624-6245a133524f&attest=-fs2pVgmisn3y3J4t8G1NGvvZ4afs7AOsukDhO-8eD4
+[info] 
+[info] 3. Paste or enter the authorization code below once you have it:
+[info] 
+[debug] [2026-10-01T06:31:43.198Z] ----------------------------------------------------------------------
+[debug] [2026-10-01T06:31:43.259Z] Command:       /usr/local/bin/firebase /home/codespace/.cache/firebase/tools/lib/node_modules/firebase-tools/lib/bin/firebase login --no-localhost
+[debug] [2026-10-01T06:31:43.259Z] CLI Version:   15.32.1
+[debug] [2026-10-01T06:31:43.260Z] Platform:      linux
+[debug] [2026-10-01T06:31:43.260Z] Node Version:  v20.18.2
+[debug] [2026-10-01T06:31:43.260Z] Detected Agent: unknown
+[debug] [2026-10-01T06:31:43.260Z] Time:          Thu Oct 01 2026 06:31:43 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-10-01T06:31:43.260Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  The Firebase CLI’s MCP server feature can optionally make use of Gemini in Firebase. Learn more about Gemini in Firebase and how it uses your data: https://firebase.google.com/docs/gemini-in-firebase#how-gemini-in-firebase-uses-your-data 
+[info] 
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you. 
+[debug] [2026-10-01T06:34:11.680Z] >>> [apiv2][query] POST https://auth.firebase.tools/attest [none]
+[debug] [2026-10-01T06:34:11.681Z] >>> [apiv2][body] POST https://auth.firebase.tools/attest {"session_id":"2b4286ce-6d6e-4414-8869-8f659dbe94cd"}
+[debug] [2026-10-01T06:34:12.198Z] <<< [apiv2][status] POST https://auth.firebase.tools/attest 200
+[debug] [2026-10-01T06:34:12.198Z] <<< [apiv2][body] POST https://auth.firebase.tools/attest {"token":"stR_4JvjmKml1acPa0FIwJDy8e9N2Moq_e1SSIxmFvA"}
+[info] 
+[info] To sign in to the Firebase CLI:
+[info] 
+[info] 1. Take note of your session ID:
+[info] 
+[info]    2B428
+[info] 
+[info] 2. Visit the URL below on any device and follow the instructions to get your code:
+[info] 
+[info]    https://auth.firebase.tools/login?code_challenge=bbFf-3fuahOFh9uNJDPRJOT9mRp2fS0_-FsNLGRbm_8&session=2b4286ce-6d6e-4414-8869-8f659dbe94cd&attest=stR_4JvjmKml1acPa0FIwJDy8e9N2Moq_e1SSIxmFvA
+[info] 
+[info] 3. Paste or enter the authorization code below once you have it:
+[info] 
