@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/helpers.dart';
 import '../utils/notify.dart';
+import 'add_students_page.dart';
+import 'subjects_page.dart';
 
 // ───────────────────────── หน้าหลักของครู ─────────────────────────
 
@@ -15,6 +17,28 @@ class TeacherHomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('งานที่มอบหมาย (ครู)'),
         actions: [
+          IconButton(
+            tooltip: 'จัดการรายวิชา',
+            icon: const Icon(Icons.menu_book),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ManageSubjectsPage(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'เพิ่มบัญชีนักเรียน',
+            icon: const Icon(Icons.person_add),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AddStudentsPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => FirebaseAuth.instance.signOut(),
@@ -93,7 +117,42 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _maxScoreController = TextEditingController(text: '20');
-  String _type = 'math';
+  // รายวิชาที่เลือกได้ โหลดจากฐานข้อมูล ถ้ายังไม่มีให้ใช้ค่าเริ่มต้น
+  List<Map<String, String>> _subjects = subjectNames.entries
+      .map((e) => {'name': e.value, 'type': e.key})
+      .toList();
+  int _selected = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSubjects();
+  }
+
+  Future<void> _loadSubjects() async {
+    try {
+      final snap =
+          await FirebaseFirestore.instance.collection('subjects').get();
+      final list = snap.docs
+          .map((d) => {
+                'name': (d.data()['name'] as String?) ?? '',
+                'type': (d.data()['type'] as String?) ?? '',
+              })
+          .where((m) => m['name']!.isNotEmpty)
+          .toList()
+        ..sort((a, b) => a['name']!.compareTo(b['name']!));
+      if (list.isEmpty || !mounted) return;
+      setState(() {
+        _subjects = list;
+        _selected = 0;
+      });
+    } catch (_) {
+      // ใช้รายวิชาเริ่มต้นต่อไป
+    }
+  }
+
+  String get _subjectName => _subjects[_selected]['name'] ?? '';
+  String get _type => _subjects[_selected]['type'] ?? '';
   late DateTime _due = DateTime(
     DateTime.now().year,
     DateTime.now().month,
@@ -148,7 +207,7 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
     try {
       final newRef =
           await FirebaseFirestore.instance.collection('assignments').add({
-        'subject': subjectNames[_type] ?? '',
+        'subject': _subjectName,
         'type': _type,
         'title': title,
         'description': _descController.text.trim(),
@@ -159,7 +218,7 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
       });
       try {
         await notifyAllStudents(
-          title: 'มีงานใหม่: ${subjectNames[_type] ?? ''}',
+          title: 'มีงานใหม่: $_subjectName',
           body: title,
           assignmentId: newRef.id,
         );
@@ -182,16 +241,21 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            DropdownButtonFormField<String>(
-              value: _type,
+            DropdownButtonFormField<int>(
+              key: ValueKey(_subjects.length),
+              initialValue: _selected,
               decoration: const InputDecoration(
                 labelText: 'รายวิชา',
                 border: OutlineInputBorder(),
               ),
-              items: subjectNames.entries
-                  .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
-                  .toList(),
-              onChanged: (v) => setState(() => _type = v ?? _type),
+              items: List.generate(
+                _subjects.length,
+                (i) => DropdownMenuItem(
+                  value: i,
+                  child: Text(_subjects[i]['name'] ?? ''),
+                ),
+              ),
+              onChanged: (v) => setState(() => _selected = v ?? _selected),
             ),
             const SizedBox(height: 16),
             TextField(

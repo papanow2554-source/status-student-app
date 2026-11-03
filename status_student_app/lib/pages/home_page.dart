@@ -3,8 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/helpers.dart';
 import 'assignment_detail_page.dart';
-import 'my_scores_page.dart';
 import 'notifications_page.dart';
+import 'profile_page.dart';
+import 'subjects_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,9 +19,9 @@ class _HomePageState extends State<HomePage> {
 
   static const List<Widget> _pages = [
     _HomeTab(),
-    _SubjectsTab(),
+    SubjectsTab(),
     NotificationsTab(),
-    _ProfileTab(),
+    ProfileTab(),
   ];
 
   static const List<String> _titles = [
@@ -101,17 +102,11 @@ class _HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.email?.split('@').first ?? 'นักเรียน';
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          'สวัสดี, $displayName 👋',
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        const Text('นักเรียนชั้น ม.4/2', style: TextStyle(color: Colors.grey)),
+        const UserGreeting(),
         const SizedBox(height: 24),
         const Text(
           'งานที่ต้องส่ง',
@@ -191,80 +186,6 @@ class _HomeTab extends StatelessWidget {
               },
             );
           },
-        ),
-      ],
-    );
-  }
-}
-
-class _SubjectsTab extends StatelessWidget {
-  const _SubjectsTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final subjects = [
-      {'name': 'คณิตศาสตร์', 'teacher': 'ครูภัฏวุฒิ อินทรกำแก', 'type': 'math'},
-      {'name': 'ภาษาไทย', 'teacher': 'ครูวิฎุดา ใจดี', 'type': 'thai'},
-      {'name': 'วิทยาการคำนวณ', 'teacher': 'ครูเอกพงษ์ ชำนาญ', 'type': 'cs'},
-      {'name': 'วิทยาศาสตร์', 'teacher': 'ครูจิราณา มีคง', 'type': 'science'},
-      {'name': 'สังคมศึกษา', 'teacher': 'ครูนิษฐาน รักการดี', 'type': 'social'},
-      {'name': 'ภาษาอังกฤษ', 'teacher': 'ครู Sarah Johnson', 'type': 'english'},
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: subjects.length,
-      itemBuilder: (context, index) {
-        final s = subjects[index];
-        final type = s['type']!;
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: colorFor(type).withValues(alpha: 0.15),
-              child: Icon(iconFor(type), color: colorFor(type)),
-            ),
-            title: Text(
-              s['name']!,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(s['teacher']!),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ProfileTab extends StatelessWidget {
-  const _ProfileTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const SizedBox(height: 16),
-        const Center(
-          child: CircleAvatar(radius: 40, child: Icon(Icons.person, size: 40)),
-        ),
-        const SizedBox(height: 16),
-        Center(
-          child: Text(user?.email ?? '', style: const TextStyle(fontSize: 16)),
-        ),
-        const SizedBox(height: 24),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.bar_chart),
-            title: const Text('คะแนนของฉัน'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const MyScoresPage()),
-              );
-            },
-          ),
         ),
       ],
     );
