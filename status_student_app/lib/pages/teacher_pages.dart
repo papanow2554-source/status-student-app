@@ -82,7 +82,8 @@ class TeacherHomePage extends StatelessWidget {
                 return AssignmentCard(
                   icon: iconFor(type),
                   iconColor: colorFor(type),
-                  subject: d['subject'] as String? ?? '',
+                  subject:
+                      '${d['subject'] as String? ?? ''} • ${((d['classroom'] as String?) ?? '').isEmpty ? 'ทุกห้อง' : d['classroom']}',
                   title: d['title'] as String? ?? '',
                   dueText: '${due.day}/${due.month}/${due.year + 543}',
                   dueColor: Colors.grey,
@@ -107,7 +108,11 @@ class TeacherHomePage extends StatelessWidget {
 // ───────────────────────── สร้างงานใหม่ ─────────────────────────
 
 class CreateAssignmentPage extends StatefulWidget {
-  const CreateAssignmentPage({super.key});
+  /// ถ้าส่ง editId กับ existing มา หน้านี้จะเป็นโหมดแก้ไขงานเดิม
+  final String? editId;
+  final Map<String, dynamic>? existing;
+
+  const CreateAssignmentPage({super.key, this.editId, this.existing});
 
   @override
   State<CreateAssignmentPage> createState() => _CreateAssignmentPageState();
@@ -117,6 +122,8 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _maxScoreController = TextEditingController(text: '20');
+  final _roomController = TextEditingController();
+  List<String> _rooms = [];
   // รายวิชาที่เลือกได้ โหลดจากฐานข้อมูล ถ้ายังไม่มีให้ใช้ค่าเริ่มต้น
   List<Map<String, String>> _subjects = subjectNames.entries
       .map((e) => {'name': e.value, 'type': e.key})
@@ -126,7 +133,55 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
   @override
   void initState() {
     super.initState();
+    _prefill();
     _loadSubjects();
+    _loadRooms();
+  }
+
+  // ห้องเรียนที่มีอยู่ในระบบ (จากข้อมูลนักเรียน) ไว้ให้กดเลือก
+  Future<void> _loadRooms() async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'student')
+          .get();
+      final set = <String>{};
+      for (final d in snap.docs) {
+        final r = ((d.data()['classroom'] as String?) ?? '').trim();
+        if (r.isNotEmpty) set.add(r);
+      }
+      if (!mounted) return;
+      setState(() => _rooms = set.toList()..sort());
+    } catch (_) {}
+  }
+
+  void _prefill() {
+    final e = widget.existing;
+    if (e == null) return;
+    _titleController.text = (e['title'] as String?) ?? '';
+    _descController.text = (e['description'] as String?) ?? '';
+    final ms = e['maxScore'] as num?;
+    if (ms != null) _maxScoreController.text = fmtNum(ms);
+    _roomController.text = (e['classroom'] as String?) ?? '';
+    final ts = e['dueAt'];
+    if (ts is Timestamp) _due = ts.toDate();
+    _applyExistingSubject();
+  }
+
+  void _applyExistingSubject() {
+    final e = widget.existing;
+    if (e == null) return;
+    final name = (e['subject'] as String?) ?? '';
+    final idx = _subjects.indexWhere((m) => m['name'] == name);
+    if (idx >= 0) {
+      _selected = idx;
+    } else if (name.isNotEmpty) {
+      _subjects = [
+        {'name': name, 'type': (e['type'] as String?) ?? ''},
+        ..._subjects,
+      ];
+      _selected = 0;
+    }
   }
 
   Future<void> _loadSubjects() async {
@@ -145,6 +200,7 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
       setState(() {
         _subjects = list;
         _selected = 0;
+        _applyExistingSubject();
       });
     } catch (_) {
       // ใช้รายวิชาเริ่มต้นต่อไป
@@ -167,6 +223,7 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
     _titleController.dispose();
     _descController.dispose();
     _maxScoreController.dispose();
+    _roomController.dispose();
     super.dispose();
   }
 
@@ -205,6 +262,25 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
 
     setState(() => _saving = true);
     try {
+      if (widget.editId != null) {
+        await FirebaseFirestore.instance
+            .collection('assignments')
+            .doc(widget.editId)
+            .update({
+          'subject': _subjectName,
+          'type': _type,
+          'title': title,
+          'description': _descController.text.trim(),
+          'maxScore': maxScore,
+          'classroom': _roomController.text.trim(),
+          'dueAt': Timestamp.fromDate(_due),
+        });
+        if (mounted) Navigator.of(context).pop(true);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('บันทึกการแก้ไขแล้ว')),
+        );
+        return;
+      }
       final newRef =
           await FirebaseFirestore.instance.collection('assignments').add({
         'subject': _subjectName,
@@ -212,6 +288,7 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
         'title': title,
         'description': _descController.text.trim(),
         'maxScore': maxScore,
+        'classroom': _roomController.text.trim(),
         'dueAt': Timestamp.fromDate(_due),
         'teacherId': FirebaseAuth.instance.currentUser?.uid,
         'createdAt': FieldValue.serverTimestamp(),
@@ -221,6 +298,7 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
           title: 'มีงานใหม่: $_subjectName',
           body: title,
           assignmentId: newRef.id,
+          classroom: _roomController.text.trim(),
         );
       } catch (_) {
         // แจ้งเตือนส่งไม่ได้ ไม่ต้องให้การมอบหมายงานล้มเหลวไปด้วย
@@ -236,13 +314,15 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('มอบหมายงานใหม่')),
+      appBar: AppBar(
+        title: Text(widget.editId == null ? 'มอบหมายงานใหม่' : 'แก้ไขงาน'),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             DropdownButtonFormField<int>(
-              key: ValueKey(_subjects.length),
+              key: ValueKey('${_subjects.length}_$_selected'),
               initialValue: _selected,
               decoration: const InputDecoration(
                 labelText: 'รายวิชา',
@@ -257,6 +337,34 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
               ),
               onChanged: (v) => setState(() => _selected = v ?? _selected),
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _roomController,
+              decoration: const InputDecoration(
+                labelText: 'ห้องเรียน (เว้นว่าง = ทุกห้อง)',
+                helperText: 'เช่น ม.4/2',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            if (_rooms.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ActionChip(
+                    label: const Text('ทุกห้อง'),
+                    onPressed: () => setState(() => _roomController.clear()),
+                  ),
+                  ..._rooms.map(
+                    (r) => ActionChip(
+                      label: Text(r),
+                      onPressed: () =>
+                          setState(() => _roomController.text = r),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: _titleController,
@@ -301,7 +409,7 @@ class _CreateAssignmentPageState extends State<CreateAssignmentPage> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('มอบหมายงาน'),
+                  : Text(widget.editId == null ? 'มอบหมายงาน' : 'บันทึกการแก้ไข'),
             ),
           ],
         ),
@@ -329,6 +437,49 @@ class SubmissionsPage extends StatelessWidget {
     required this.data,
   });
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('ลบงานนี้?'),
+        content: const Text(
+          'งานและงานที่นักเรียนส่งมาแล้วทั้งหมดจะถูกลบ ย้อนกลับไม่ได้',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('ยกเลิก'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('ลบ'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      final db = FirebaseFirestore.instance;
+      final subs = await db
+          .collection('submissions')
+          .where('assignmentId', isEqualTo: assignmentId)
+          .get();
+      final batch = db.batch();
+      for (final s in subs.docs) {
+        batch.delete(s.reference);
+      }
+      batch.delete(db.collection('assignments').doc(assignmentId));
+      await batch.commit();
+      navigator.pop();
+      messenger.showSnackBar(const SnackBar(content: Text('ลบงานแล้ว')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('ลบไม่สำเร็จ: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final maxScore = (data['maxScore'] as num?) ?? 0;
@@ -339,6 +490,30 @@ class SubmissionsPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(title),
+          actions: [
+            IconButton(
+              tooltip: 'แก้ไขงาน',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                final saved = await navigator.push<bool>(
+                  MaterialPageRoute(
+                    builder: (context) => CreateAssignmentPage(
+                      editId: assignmentId,
+                      existing: data,
+                    ),
+                  ),
+                );
+                // บันทึกแล้วกลับไปหน้ารายการ เพื่อให้เห็นข้อมูลล่าสุด
+                if (saved == true) navigator.pop();
+              },
+            ),
+            IconButton(
+              tooltip: 'ลบงาน',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _confirmDelete(context),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'ทั้งหมด'),
@@ -389,7 +564,11 @@ class SubmissionsPage extends StatelessWidget {
                   }
                   final missing = <_Row>[];
                   for (final u in uSnap.data!.docs) {
-                    if (!submitted.containsKey(u.id)) {
+                    if (!submitted.containsKey(u.id) &&
+                        matchesClassroom(
+                          data['classroom'] as String?,
+                          u.data()['classroom'] as String?,
+                        )) {
                       missing.add(
                         _Row((u.data()['email'] as String?) ?? u.id, null, null),
                       );

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/helpers.dart';
 import 'assignment_detail_page.dart';
+import 'calendar_widget.dart';
 import 'notifications_page.dart';
 import 'profile_page.dart';
 import 'subjects_page.dart';
@@ -113,7 +114,8 @@ class _HomeTab extends StatelessWidget {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        ClassroomBuilder(
+          builder: (context, room) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('assignments')
               .orderBy('dueAt')
@@ -128,7 +130,10 @@ class _HomeTab extends StatelessWidget {
             if (!aSnap.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
-            final docs = aSnap.data!.docs;
+            final docs = aSnap.data!.docs
+                .where((d) =>
+                    matchesClassroom(d.data()['classroom'] as String?, room))
+                .toList();
             if (docs.isEmpty) {
               return const Text('ยังไม่มีงานที่ต้องส่ง');
             }
@@ -147,7 +152,8 @@ class _HomeTab extends StatelessWidget {
                 }
 
                 return Column(
-                  children: docs.map((doc) {
+                  children: [
+                    ...docs.map((doc) {
                     final d = doc.data();
                     final due = (d['dueAt'] as Timestamp).toDate();
                     final type = d['type'] as String? ?? '';
@@ -181,11 +187,18 @@ class _HomeTab extends StatelessWidget {
                         );
                       },
                     );
-                  }).toList(),
+                    }),
+                    const SizedBox(height: 24),
+                    AssignmentCalendar(
+                      docs: docs,
+                      submittedIds: subs.keys.toSet(),
+                    ),
+                  ],
                 );
               },
             );
           },
+        ),
         ),
       ],
     );

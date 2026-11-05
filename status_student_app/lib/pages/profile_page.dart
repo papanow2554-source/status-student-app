@@ -9,6 +9,23 @@ DocumentReference<Map<String, dynamic>>? _myDoc() {
   return FirebaseFirestore.instance.collection('users').doc(uid);
 }
 
+/// ให้ builder รู้ห้องเรียนของผู้ใช้ปัจจุบัน (ว่างถ้ายังไม่ได้ตั้ง)
+class ClassroomBuilder extends StatelessWidget {
+  final Widget Function(BuildContext context, String classroom) builder;
+  const ClassroomBuilder({super.key, required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: _myDoc()?.snapshots(),
+      builder: (context, snap) {
+        final room = (snap.data?.data()?['classroom'] as String?) ?? '';
+        return builder(context, room);
+      },
+    );
+  }
+}
+
 /// ข้อความทักทายหน้าหลัก อ่านชื่อและห้องเรียนจากข้อมูลผู้ใช้
 class UserGreeting extends StatelessWidget {
   const UserGreeting({super.key});

@@ -77,14 +77,16 @@ class _AddStudentsPageState extends State<AddStudentsPage> {
     final db = FirebaseFirestore.instanceFor(app: app);
 
     for (final line in lines) {
-      final idx = line.indexOf(',');
-      if (idx < 0) {
+      final parts = line.split(',').map((e) => e.trim()).toList();
+      if (parts.length < 2) {
         _results.add(_Result(line, false, 'รูปแบบต้องเป็น อีเมล,รหัสผ่าน'));
         if (mounted) setState(() {});
         continue;
       }
-      final email = line.substring(0, idx).trim();
-      final password = line.substring(idx + 1).trim();
+      final email = parts[0];
+      final password = parts[1];
+      final classroom = parts.length > 2 ? parts[2] : '';
+      final name = parts.length > 3 ? parts.sublist(3).join(',') : '';
       try {
         final cred = await auth.createUserWithEmailAndPassword(
           email: email,
@@ -93,6 +95,8 @@ class _AddStudentsPageState extends State<AddStudentsPage> {
         await db.collection('users').doc(cred.user!.uid).set({
           'email': email,
           'role': 'student',
+          if (classroom.isNotEmpty) 'classroom': classroom,
+          if (name.isNotEmpty) 'name': name,
           'createdAt': FieldValue.serverTimestamp(),
         });
         await auth.signOut();
@@ -120,12 +124,12 @@ class _AddStudentsPageState extends State<AddStudentsPage> {
           padding: const EdgeInsets.all(16),
           children: [
             const Text(
-              'พิมพ์หรือวางรายชื่อ บรรทัดละ 1 คน ในรูปแบบ\nอีเมล,รหัสผ่าน',
+              'พิมพ์หรือวางรายชื่อ บรรทัดละ 1 คน ในรูปแบบ\nอีเมล,รหัสผ่าน,ห้องเรียน,ชื่อ\n(ห้องเรียนและชื่อไม่ใส่ก็ได้)',
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 4),
             const Text(
-              'เช่น\nstu001@school.com,123456\nstu002@school.com,123456',
+              'เช่น\nstu001@school.com,123456,ม.4/2,สมชาย ใจดี\nstu002@school.com,123456,ม.4/3',
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
             const SizedBox(height: 12),

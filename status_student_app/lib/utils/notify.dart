@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'helpers.dart';
 
 /// ส่งแจ้งเตือนให้ผู้ใช้คนเดียว
 Future<void> notifyUser({
@@ -22,12 +23,14 @@ Future<void> notifyAllStudents({
   required String title,
   required String body,
   String? assignmentId,
+  String? classroom,
 }) async {
   final db = FirebaseFirestore.instance;
   final students =
       await db.collection('users').where('role', isEqualTo: 'student').get();
   final batch = db.batch();
   for (final s in students.docs) {
+    if (!matchesClassroom(classroom, s.data()['classroom'] as String?)) continue;
     batch.set(db.collection('notifications').doc(), {
       'userId': s.id,
       'title': title,

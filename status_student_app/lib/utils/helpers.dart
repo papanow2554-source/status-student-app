@@ -68,6 +68,17 @@ String gradeFor(double percent) {
   return 'F';
 }
 
+/// ทำให้ชื่อห้องเปรียบเทียบกันได้ (ตัดช่องว่าง, ไม่สนตัวพิมพ์เล็กใหญ่)
+String normalizeClassroom(String? s) =>
+    (s ?? '').replaceAll(RegExp(r'\s+'), '').toLowerCase();
+
+/// งานที่ไม่ระบุห้อง = ทุกห้อง, ถ้าระบุห้อง นักเรียนต้องอยู่ห้องเดียวกัน
+bool matchesClassroom(String? assignmentRoom, String? studentRoom) {
+  final a = normalizeClassroom(assignmentRoom);
+  if (a.isEmpty) return true;
+  return a == normalizeClassroom(studentRoom);
+}
+
 String formatDateTime(DateTime d) {
   final hh = d.hour.toString().padLeft(2, '0');
   final mm = d.minute.toString().padLeft(2, '0');

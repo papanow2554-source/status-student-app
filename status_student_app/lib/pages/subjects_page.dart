@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/helpers.dart';
 import 'assignment_detail_page.dart';
+import 'profile_page.dart';
 
 // ───────────────────────── แท็บรายวิชา (นักเรียน) ─────────────────────────
 
@@ -89,7 +90,9 @@ class SubjectAssignmentsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(name)),
       body: SafeArea(
-        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        child: ClassroomBuilder(
+          builder: (context, room) =>
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('assignments')
               .where('subject', isEqualTo: name)
@@ -103,7 +106,10 @@ class SubjectAssignmentsPage extends StatelessWidget {
             }
             DateTime due(QueryDocumentSnapshot<Map<String, dynamic>> d) =>
                 (d.data()['dueAt'] as Timestamp).toDate();
-            final docs = [...snap.data!.docs]
+            final docs = snap.data!.docs
+                .where((d) =>
+                    matchesClassroom(d.data()['classroom'] as String?, room))
+                .toList()
               ..sort((a, b) => due(a).compareTo(due(b)));
             if (docs.isEmpty) {
               return const Center(child: Text('วิชานี้ยังไม่มีงาน'));
@@ -134,6 +140,7 @@ class SubjectAssignmentsPage extends StatelessWidget {
               }).toList(),
             );
           },
+        ),
         ),
       ),
     );
